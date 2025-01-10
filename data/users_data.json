@@ -1,0 +1,36 @@
+{
+    "Aleksej": {
+        "quiz_results": [
+            {
+                "language": "en-ru",
+                "correct": 2,
+                "total": 3
+            },
+            {
+                "language": "es-ru",
+                "correct": 0,
+                "total": 3
+            },
+            {
+                "language": "en-ru",
+                "correct": 0,
+                "total": 3
+            },
+            {
+                "language": "es-ru",
+                "correct": 0,
+                "total": 3
+            },
+            {
+                "language": "de-ru",
+                "correct": 0,
+                "total": 3
+            },
+            {
+                "language": "es-ru",
+                "correct": 0,
+                "total": 3
+            }
+        ]
+    }
+}
