@@ -1,3 +1,4 @@
+import logging
 from app.models import User
 from app.utils import load_json, save_json, log_error
 
@@ -6,6 +7,7 @@ def main_menu():
     current_user = None  # Текущий пользователь
 
     # Приветствие
+    logging.info("Запуск главного меню.")
     print("\nДобро пожаловать в программу \"Learn & Speak Pro\"!")
 
     while True:
@@ -35,11 +37,14 @@ def main_menu():
                     confirm = input(f"Вы уверены, что хотите удалить пользователя {current_user.username}? (да/нет): ")
                     if confirm.lower() == "да":
                         current_user.delete()
+                        logging.info(f"Пользователь {current_user.username} удалён.")
                         current_user = None
                 elif choice == "6":
                     current_user.reset_statistics()
+                    logging.info(f"Статистика пользователя {current_user.username} сброшена.")
                 elif choice == "7":
                     current_user = None
+                    logging.info("Возврат в главное меню.")
                 else:
                     print("Неверный выбор. Попробуйте снова.")
             else:
@@ -52,11 +57,13 @@ def main_menu():
                 if choice == "1":
                     username = input("Введите имя пользователя (или добавьте нового): ")
                     current_user = User(username)
+                    logging.info(f"Пользователь {username} выбран.")
                     print(f"Добро пожаловать {username}")
                 elif choice == "2":
                     show_all_users()
                 elif choice == "3":
                     print("Выход из программы...")
+                    logging.info("Программа завершена.")
                     break
                 else:
                     print("Неверный выбор. Попробуйте снова.")
@@ -71,6 +78,7 @@ def show_all_users():
         data = load_json("data/users_data.json")
         if not data:
             print("Нет зарегистрированных пользователей.")
+            logging.info("Запрос всех пользователей: данных нет.")
             return
 
         print("\n--- Все пользователи и их статистика ---")
@@ -83,6 +91,7 @@ def show_all_users():
             print(f"  - Количество игр: {total_games}")
             print(f"  - Правильных ответов: {total_correct_answers}")
             print("-" * 30)
+        logging.info("Запрос всех пользователей: данные выведены успешно.")
     except Exception as e:
         log_error(f"Ошибка в show_all_users: {e}")
         print(f"Произошла ошибка: {e}.")
@@ -118,6 +127,7 @@ def start_quiz(user, language):
         words = load_json(f"data/{language}.json")
         if not words:
             print(f"Словарь для языка {language} пуст или не найден.")
+            logging.warning(f"Словарь для языка {language} отсутствует.")
             return
 
         correct_answers = 0
@@ -125,11 +135,13 @@ def start_quiz(user, language):
 
         print(f"\nНачинаем викторину для пользователя {user.username}.")
         print("Введите перевод для каждого слова. Напишите 'exit', чтобы остановить викторину в любой момент.\n")
+        logging.info(f"Викторина для пользователя {user.username} начата (язык: {language}).")
 
         for word, translation in words.items():
             answer = input(f"Что означает слово '{word}'? ").strip()
             if answer.lower() == "exit":
                 print("Викторина остановлена.")
+                logging.info(f"Викторина для пользователя {user.username} остановлена.")
                 break
             if answer.lower() == translation.lower():
                 print("Правильно!")
@@ -139,6 +151,7 @@ def start_quiz(user, language):
 
         print("\nВикторина завершена.")
         print(f"Вы ответили правильно на {correct_answers} из {total_questions} вопросов.")
+        logging.info(f"Викторина завершена для пользователя {user.username}: {correct_answers}/{total_questions}.")
 
         # Сохраняем результаты
         user.add_quiz_result(language, correct_answers, total_questions)

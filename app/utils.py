@@ -9,12 +9,27 @@ def setup_logging():
     """Настраивает логирование для приложения."""
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
-    logging.basicConfig(
-        filename=LOG_FILE,
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        encoding="utf-8"  # Указание кодировки UTF-8 для корректного сохранения
-    )
+
+    # Настраиваем логгер
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    # Формат логов
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    formatter = logging.Formatter(log_format)
+
+    # Логи в файл
+    file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+    # Логи в консоль (только для ошибок)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.ERROR)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
     logging.info("Логирование настроено.")
 
 def log_error(error_message):

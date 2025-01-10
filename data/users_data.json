@@ -32,5 +32,14 @@
                 "total": 3
             }
         ]
+    },
+    "Linda": {
+        "quiz_results": [
+            {
+                "language": "en-ru",
+                "correct": 0,
+                "total": 3
+            }
+        ]
     }
 }
