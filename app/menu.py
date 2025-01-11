@@ -8,7 +8,7 @@ def main_menu():
 
     # Приветствие
     logging.info("Запуск главного меню.")
-    print("\nДобро пожаловать в программу \"Learn & Speak Pro\"!")
+    print("\nДобро пожаловать в программу \"SpeakEasy\"!")
 
     while True:
         try:
