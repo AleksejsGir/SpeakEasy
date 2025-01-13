@@ -1,9 +1,12 @@
 import logging
-from app.models import User
-from app.utils import load_json, save_json, log_error
-
+from app.models import UserManager
+from app.db import get_all_users, get_all_words, SessionLocal, QuizResult, User
+from app.utils import log_error
 
 def main_menu():
+    """
+    Главное меню программы.
+    """
     current_user = None  # Текущий пользователь
 
     # Приветствие
@@ -13,52 +16,50 @@ def main_menu():
     while True:
         try:
             if current_user:
+                # Меню действий для текущего пользователя
                 print(f"\n--- Меню пользователя {current_user.username} ---")
                 print("1. Пройти викторину")
-                print("2. Просмотреть статистику")
+                print("2. Посмотреть детализированные результаты игр")
                 print("3. Изменить имя пользователя")
-                print("4. Посмотреть детализированные результаты игр")
-                print("5. Удалить пользователя")
-                print("6. Сбросить статистику")
-                print("7. Вернуться в главное меню")
+                print("4. Удалить пользователя")
+                print("5. Вернуться в главное меню")
                 choice = input("Ваш выбор: ")
 
                 if choice == "1":
                     language = select_language()
-                    start_quiz(current_user, language)
+                    start_quiz(current_user.username, language)
                 elif choice == "2":
-                    current_user.show_statistics()
+                    show_detailed_results(current_user.username)
                 elif choice == "3":
-                    new_name = input("Введите новое имя пользователя: ")
-                    current_user.change_username(new_name)
+                    new_name = input("Введите новое имя пользователя: ").strip()
+                    if new_name:
+                        current_user.change_username(new_name)
                 elif choice == "4":
-                    current_user.show_detailed_results()
-                elif choice == "5":
                     confirm = input(f"Вы уверены, что хотите удалить пользователя {current_user.username}? (да/нет): ")
                     if confirm.lower() == "да":
                         current_user.delete()
-                        logging.info(f"Пользователь {current_user.username} удалён.")
                         current_user = None
-                elif choice == "6":
-                    current_user.reset_statistics()
-                    logging.info(f"Статистика пользователя {current_user.username} сброшена.")
-                elif choice == "7":
+                        print("Пользователь успешно удалён.")
+                elif choice == "5":
+                    current_user.close_session()
                     current_user = None
                     logging.info("Возврат в главное меню.")
                 else:
                     print("Неверный выбор. Попробуйте снова.")
             else:
+                # Главное меню
                 print("\n--- Главное меню ---")
                 print("1. Выбрать или добавить пользователя")
-                print("2. Просмотреть всех пользователей и их статистику")
+                print("2. Просмотреть всех пользователей")
                 print("3. Выйти")
                 choice = input("Ваш выбор: ")
 
                 if choice == "1":
-                    username = input("Введите имя пользователя (или добавьте нового): ")
-                    current_user = User(username)
-                    logging.info(f"Пользователь {username} выбран.")
-                    print(f"Добро пожаловать {username}")
+                    username = input("Введите имя пользователя: ").strip()
+                    if username:
+                        current_user = UserManager(username)
+                        print(f"Добро пожаловать, {current_user.username}!")
+                        logging.info(f"Пользователь {current_user.username} выбран.")
                 elif choice == "2":
                     show_all_users()
                 elif choice == "3":
@@ -71,33 +72,29 @@ def main_menu():
             log_error(f"Ошибка в main_menu: {e}")
             print(f"Произошла ошибка: {e}. Попробуйте снова.")
 
-
 def show_all_users():
-    """Выводит всех пользователей и их статистику."""
+    """
+    Выводит всех пользователей из базы данных.
+    """
     try:
-        data = load_json("data/users_data.json")
-        if not data:
+        users = get_all_users()  # Получаем всех пользователей из базы данных
+        if not users:
             print("Нет зарегистрированных пользователей.")
             logging.info("Запрос всех пользователей: данных нет.")
             return
 
-        print("\n--- Все пользователи и их статистика ---")
-        for index, (username, user_data) in enumerate(data.items(), start=1):
-            quiz_results = user_data.get("quiz_results", [])
-            total_games = len(quiz_results)
-            total_correct_answers = sum(result.get("correct", 0) for result in quiz_results)
-
-            print(f"{index}. Пользователь: {username}")
-            print(f"  - Количество игр: {total_games}")
-            print(f"  - Правильных ответов: {total_correct_answers}")
-            print("-" * 30)
-        logging.info("Запрос всех пользователей: данные выведены успешно.")
+        print("\n--- Все пользователи ---")
+        for index, user in enumerate(users, start=1):
+            print(f"{index}. {user.username}")
+        logging.info("Список пользователей успешно выведен.")
     except Exception as e:
         log_error(f"Ошибка в show_all_users: {e}")
         print(f"Произошла ошибка: {e}.")
 
-
 def select_language():
+    """
+    Выбор языка для викторины.
+    """
     while True:
         try:
             print("\n--- Выберите язык для викторины ---")
@@ -108,53 +105,90 @@ def select_language():
             choice = input("Ваш выбор: ")
 
             if choice == "1":
-                return "en-ru"
+                return "en"
             elif choice == "2":
-                return "es-ru"
+                return "es"
             elif choice == "3":
-                return "de-ru"
+                return "de"
             elif choice == "4":
-                return "fr-ru"
+                return "fr"
             else:
                 print("Неверный выбор. Попробуйте снова.")
         except Exception as e:
             log_error(f"Ошибка в select_language: {e}")
             print(f"Произошла ошибка: {e}.")
 
-
-def start_quiz(user, language):
+def start_quiz(username, language):
+    """
+    Начало викторины для пользователя.
+    """
     try:
-        words = load_json(f"data/{language}.json")
-        if not words:
+        words = get_all_words()  # Получаем все слова из базы данных
+        language_words = [word for word in words if word.language == language]
+
+        if not language_words:
             print(f"Словарь для языка {language} пуст или не найден.")
             logging.warning(f"Словарь для языка {language} отсутствует.")
             return
 
         correct_answers = 0
-        total_questions = len(words)
+        total_questions = len(language_words)
 
-        print(f"\nНачинаем викторину для пользователя {user.username}.")
+        print(f"\nНачинаем викторину для пользователя {username}.")
         print("Введите перевод для каждого слова. Напишите 'exit', чтобы остановить викторину в любой момент.\n")
-        logging.info(f"Викторина для пользователя {user.username} начата (язык: {language}).")
+        logging.info(f"Викторина начата (пользователь: {username}, язык: {language}).")
 
-        for word, translation in words.items():
-            answer = input(f"Что означает слово '{word}'? ").strip()
+        for word in language_words:
+            answer = input(f"Что означает слово '{word.word}'? ").strip()
             if answer.lower() == "exit":
                 print("Викторина остановлена.")
-                logging.info(f"Викторина для пользователя {user.username} остановлена.")
+                logging.info(f"Викторина для пользователя {username} остановлена.")
                 break
-            if answer.lower() == translation.lower():
+            if answer.lower() == word.translation.lower():
                 print("Правильно!")
                 correct_answers += 1
             else:
-                print(f"Неправильно. Правильный ответ: {translation}")
+                print(f"Неправильно. Правильный ответ: {word.translation}")
 
         print("\nВикторина завершена.")
         print(f"Вы ответили правильно на {correct_answers} из {total_questions} вопросов.")
-        logging.info(f"Викторина завершена для пользователя {user.username}: {correct_answers}/{total_questions}.")
+        logging.info(f"Викторина завершена (пользователь: {username}): {correct_answers}/{total_questions}.")
 
-        # Сохраняем результаты
-        user.add_quiz_result(language, correct_answers, total_questions)
+        # Сохранение результатов
+        session = SessionLocal()
+        user = session.query(User).filter_by(username=username).first()
+        new_result = QuizResult(
+            user_id=user.id,
+            language=language,
+            correct_answers=correct_answers,
+            total_questions=total_questions
+        )
+        session.add(new_result)
+        session.commit()
+        session.close()
+        print("Результаты сохранены.")
     except Exception as e:
         log_error(f"Ошибка в start_quiz: {e}")
-        print(f"Произошла ошибка: {e}. Викторина не была завершена.")
+        print(f"Произошла ошибка: {e}. Викторина не завершена.")
+
+def show_detailed_results(username):
+    """
+    Показывает детализированные результаты игр пользователя.
+    """
+    try:
+        session = SessionLocal()
+        user = session.query(User).filter_by(username=username).first()
+        if not user or not user.quiz_results:
+            print(f"У пользователя {username} пока нет результатов викторин.")
+            session.close()
+            return
+
+        print(f"\n--- Детализированные результаты игр пользователя {username} ---")
+        for result in user.quiz_results:
+            print(f"Язык: {result.language}")
+            print(f"Правильные ответы: {result.correct_answers}/{result.total_questions}")
+            print("-" * 30)
+        session.close()
+    except Exception as e:
+        log_error(f"Ошибка в show_detailed_results: {e}")
+        print(f"Произошла ошибка: {e}.")
