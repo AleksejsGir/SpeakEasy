@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.db import Base, User, QuizResult
 
+
 @pytest.fixture
 def test_db():
     """
@@ -13,6 +14,7 @@ def test_db():
     Base.metadata.create_all(engine)
     TestingSessionLocal = sessionmaker(bind=engine)
     return TestingSessionLocal()
+
 
 def test_add_user(test_db):
     """
@@ -25,6 +27,7 @@ def test_add_user(test_db):
     user = session.query(User).filter_by(username="Ivan").first()
     assert user is not None
     assert user.username == "Ivan"
+
 
 def test_add_quiz_result(test_db):
     """
@@ -47,6 +50,7 @@ def test_add_quiz_result(test_db):
     assert results[0].correct_answers == 4
     assert results[0].total_questions == 5
 
+
 def test_change_username(test_db):
     """
     Тест изменения имени пользователя.
@@ -64,6 +68,7 @@ def test_change_username(test_db):
     updated_user = session.query(User).filter_by(username="Maria").first()
     assert updated_user is not None
     assert updated_user.username == "Maria"
+
 
 def test_delete_user(test_db):
     """

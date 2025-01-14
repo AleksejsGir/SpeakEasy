@@ -1,8 +1,8 @@
 import pytest
-from app.db import initialize_database, add_user, get_all_users, add_word, get_all_words
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.db import Base, User, Word
+
 
 @pytest.fixture
 def test_session():
@@ -17,6 +17,7 @@ def test_session():
     session.close()
     engine.dispose()
 
+
 def test_add_user(test_session):
     """
     Тест добавления пользователей в базу данных.
@@ -28,6 +29,7 @@ def test_add_user(test_session):
     users = test_session.query(User).all()
     assert len(users) == 1
     assert users[0].username == "Aleksej"
+
 
 def test_add_word(test_session):
     """
@@ -42,6 +44,7 @@ def test_add_word(test_session):
     assert words[0].word == "cat"
     assert words[0].translation == "кот"
 
+
 def test_get_all_users(test_session):
     """
     Тест получения всех пользователей.
@@ -54,6 +57,7 @@ def test_get_all_users(test_session):
     assert len(users) == 2
     assert users[0].username == "Aleksej"
     assert users[1].username == "Linda"
+
 
 def test_get_all_words(test_session):
     """
