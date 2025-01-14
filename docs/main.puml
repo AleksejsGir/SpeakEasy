@@ -1,0 +1,92 @@
+@startuml
+title Архитектура SpeakEasy
+
+' Диаграмма классов
+package "App" {
+    class MainMenu {
+        +main_menu(): void
+        +handle_main_menu(): void
+        +handle_user_menu(): void
+    }
+
+    class UserActions {
+        +select_or_create_user(): User
+        +show_all_users(): void
+        +confirm_user_deletion(User): bool
+        +change_username(User): void
+    }
+
+    class QuizLogic {
+        +select_language(): str
+        +start_quiz(username, language): void
+        +save_quiz_result(username, language, correct_answers, total_questions): void
+        +show_detailed_results(username): void
+    }
+
+    class Utils {
+        +setup_logging(log_level): void
+        +log_error(message): void
+        +log_info(message): void
+    }
+
+    MainMenu --> UserActions
+    MainMenu --> QuizLogic
+    MainMenu --> Utils
+    QuizLogic --> Utils
+}
+
+@enduml
+
+' Диаграмма последовательности: Добавление пользователя
+@startuml
+title Диаграмма последовательности: Добавление пользователя
+
+actor Пользователь as User
+participant "Главное меню" as MainMenu
+participant "Действия с пользователями" as UserActions
+participant "База данных" as Database
+
+User -> MainMenu: Запуск главного меню
+MainMenu -> User: Введите имя пользователя
+User -> MainMenu: Alice
+MainMenu -> UserActions: select_or_create_user("Alice")
+UserActions -> Database: Проверить наличие пользователя
+Database --> UserActions: Пользователь не найден
+UserActions -> Database: Добавить пользователя в базу данных
+Database --> UserActions: Пользователь добавлен
+UserActions --> MainMenu: Новый пользователь создан
+MainMenu --> User: Пользователь Alice добавлен
+@enduml
+
+' Диаграмма последовательности: Прохождение викторины
+@startuml
+title Диаграмма последовательности: Прохождение викторины
+
+actor Пользователь as User
+participant "Главное меню" as MainMenu
+participant "Логика викторины" as QuizLogic
+participant "База данных" as Database
+
+User -> MainMenu: Выбрать викторину
+MainMenu -> QuizLogic: select_language()
+QuizLogic -> User: Выберите язык
+User -> QuizLogic: Английский → Русский
+
+QuizLogic -> Database: Загрузить слова для языка "en"
+Database --> QuizLogic: Список слов
+
+loop На каждый вопрос
+    QuizLogic -> User: Вопрос: Перевод слова "cat"?
+    User -> QuizLogic: Ответ: "кот"
+    QuizLogic -> QuizLogic: Проверка ответа
+    alt Правильный ответ
+        QuizLogic -> User: Правильно!
+    else Неправильный ответ
+        QuizLogic -> User: Неправильно. Правильный ответ: "кот"
+    end
+end
+
+QuizLogic -> Database: Сохранить результаты викторины
+Database --> QuizLogic: Результаты сохранены
+QuizLogic --> User: Викторина завершена. Результаты: 3/5
+@enduml
