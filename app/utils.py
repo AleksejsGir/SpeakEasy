@@ -1,22 +1,29 @@
 import logging
-import os
 
 
-def setup_logging():
+def setup_logging(log_level=logging.INFO, to_console=False):
     """
     Настройка общего логирования.
+    :param log_level: Уровень логирования (например, logging.INFO, logging.DEBUG).
+    :param to_console: Выводить ли логи в консоль.
     """
-    log_dir = "logs"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)  # Создаём директорию для логов, если её нет
-
     logging.basicConfig(
-        filename=os.path.join(log_dir, "app.log"),
-        level=logging.INFO,
+        filename="logs/app.log",
+        level=log_level,
         format="%(asctime)s [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         encoding="utf-8"
     )
+
+    if to_console:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(log_level)
+        console_formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+        console_handler.setFormatter(console_formatter)
+        logging.getLogger().addHandler(console_handler)
+
+    logging.info("Логирование настроено на уровень %s.", logging.getLevelName(log_level))
+
 
 
 def setup_sqlalchemy_logging(level=logging.WARNING):
@@ -26,36 +33,44 @@ def setup_sqlalchemy_logging(level=logging.WARNING):
     :param level: Уровень логирования (например, logging.INFO, logging.ERROR).
     """
     logging.getLogger("sqlalchemy.engine").setLevel(level)
+    logging.info("SQLAlchemy логирование настроено на уровень %s.", logging.getLevelName(level))
 
 
-def log_error(message):
+def log_debug(message):
     """
-    Логирует сообщение об ошибке.
+    Логирует сообщение уровня DEBUG.
+    :param message: Сообщение для логирования.
     """
-    logging.error(message)
-    print(f"Ошибка: {message}")
+    logging.debug(message)
 
 
 def log_info(message):
     """
-    Логирует информационное сообщение.
+    Логирует сообщение уровня INFO.
+    :param message: Сообщение для логирования.
     """
     logging.info(message)
-    print(f"Информация: {message}")
 
 
-def log_message(message, level="info"):
+def log_warning(message):
     """
-    Универсальная функция логирования.
+    Логирует сообщение уровня WARNING.
     :param message: Сообщение для логирования.
-    :param level: Уровень логирования (info, warning, error, critical).
     """
-    levels = {
-        "info": logging.info,
-        "warning": logging.warning,
-        "error": logging.error,
-        "critical": logging.critical
-    }
-    log_function = levels.get(level.lower(), logging.info)
-    log_function(message)
-    print(f"{level.capitalize()}: {message}")
+    logging.warning(message)
+
+
+def log_error(message):
+    """
+    Логирует сообщение уровня ERROR.
+    :param message: Сообщение для логирования.
+    """
+    logging.error(message)
+
+
+def log_critical(message):
+    """
+    Логирует сообщение уровня CRITICAL.
+    :param message: Сообщение для логирования.
+    """
+    logging.critical(message)
