@@ -1,0 +1,1015 @@
+diff --git a/README.md b/README.md
+index 25cd18b..81aeaca 100644
+--- a/README.md
++++ b/README.md
+@@ -1,21 +1,14 @@
+-Вот обновлённая версия файла `README.md` с учётом всех изменений в структуре и функционале проекта:
+-
+----
+-
+-### **Обновлённый `README.md`**
+-
+-```markdown
+ # SpeakEasy
+ 
+ ## Описание
+ 
+ **SpeakEasy** — это приложение для изучения иностранных слов. Оно поддерживает:
+-- Многопользовательский режим
+-- Викторины с выбором языка
+-- Хранение статистики и детализированных результатов
+-- Работа с базой данных SQLite
+-- Логирование и управление пользователями
+-- Поддержка веб-интерфейса с использованием FastAPI
++- Многопользовательский режим.
++- Викторины с выбором языка.
++- Хранение статистики и детализированных результатов.
++- Работа с базой данных SQLite.
++- Логирование и управление пользователями.
++- Поддержка веб-интерфейса с использованием FastAPI.
+ 
+ ---
+ 
+@@ -29,15 +22,21 @@
+ | ├── `db.py`          | Работа с базой данных               |
+ | ├── `models.py`      | Управление пользователями           |
+ | ├── `utils.py`       | Утилиты (логирование)               |
++| ├── `quiz_logic.py`  | Логика викторин                     |
++| ├── `user_actions.py`| Логика действий с пользователями    |
+ | └── `main_fastapi.py`| Веб-приложение на FastAPI           |
+ | `data/`              | Хранение данных                     |
+ | └── `data.db`        | База данных SQLite                  |
++| `docs/`              | Документация проекта                |
++| ├── `main.puml`      | Диаграммы архитектуры               |
++| ├── `main_SpeakEasy.png` | Сгенерированная диаграмма архитектуры |
++| ├── `main_add_user.png`  | Диаграмма последовательности: добавление пользователя |
++| └── `main_quiz_logic.png`| Диаграмма последовательности: прохождение викторины |
+ | `logs/`              | Логи приложения                     |
+ | └── `app.log`        | Основной лог-файл                   |
+ | `tests/`             | Автотесты                           |
+ | ├── `test_models.py` | Тестирование моделей                |
+-| ├── `test_menu.py`   | Тестирование консольного меню       |
+-| └── `test_api.py`    | Тестирование FastAPI                |
++| ├── `test_data.py`   | Тестирование работы с данными       |
+ | `main.py`            | Точка входа в приложение            |
+ | `requirements.txt`   | Зависимости проекта                 |
+ | `README.md`          | Документация                        |
+@@ -66,7 +65,7 @@ python main.py --mode console
+ 
+ Для запуска веб-интерфейса выполните:
+ ```bash
+-python main.py --mode api
++uvicorn app.main_fastapi:app --reload
+ ```
+ 
+ ### 4. Запуск тестов
+@@ -77,6 +76,25 @@ pytest tests/
+ 
+ ---
+ 
++## Диаграммы проекта
++
++### Архитектура приложения
++Диаграмма классов, отображающая основные модули и их взаимодействие:
++
++![Архитектура SpeakEasy](docs/main-_SpeakEasy.png)
++
++### Добавление пользователя
++На диаграмме показан процесс добавления нового пользователя:
++
++![Диаграмма последовательности: добавление пользователя](docs/main_add_user.png)
++
++### Процесс прохождения викторины
++На диаграмме показан процесс взаимодействия пользователя с системой во время викторины:
++
++![Диаграмма последовательности: прохождение викторины](docs/main_quiz_logic.png)
++
++---
++
+ ## Примеры использования
+ 
+ ### 1. Консольное меню
+@@ -99,16 +117,3 @@ pytest tests/
+ 
+ ---
+ 
+-```
+-
+-### **Что изменено:**
+-1. **Добавлена информация о FastAPI**:
+-   - Указано, как запустить веб-интерфейс и где находится документация API.
+-2. **Обновлена структура проекта**:
+-   - Добавлены файлы `main_fastapi.py` и `test_api.py`.
+-3. **Обновлены примеры запуска**:
+-   - Указаны команды для запуска консольного меню и веб-интерфейса.
+-4. **Доработан план развития**:
+-   - Добавлены задачи по улучшению тестов и поддержке Django.
+-
+-Если требуется что-то добавить или доработать, напишите! 🚀
+\ No newline at end of file
+diff --git a/app/__pycache__/menu.cpython-313.pyc b/app/__pycache__/menu.cpython-313.pyc
+index 59a4de0..444c134 100644
+Binary files a/app/__pycache__/menu.cpython-313.pyc and b/app/__pycache__/menu.cpython-313.pyc differ
+diff --git a/app/__pycache__/quiz_logic.cpython-313.pyc b/app/__pycache__/quiz_logic.cpython-313.pyc
+new file mode 100644
+index 0000000..0c44f57
+Binary files /dev/null and b/app/__pycache__/quiz_logic.cpython-313.pyc differ
+diff --git a/app/__pycache__/user_actions.cpython-313.pyc b/app/__pycache__/user_actions.cpython-313.pyc
+new file mode 100644
+index 0000000..0abf09b
+Binary files /dev/null and b/app/__pycache__/user_actions.cpython-313.pyc differ
+diff --git a/app/__pycache__/utils.cpython-313.pyc b/app/__pycache__/utils.cpython-313.pyc
+index 52084fc..64dffcc 100644
+Binary files a/app/__pycache__/utils.cpython-313.pyc and b/app/__pycache__/utils.cpython-313.pyc differ
+diff --git a/app/menu.py b/app/menu.py
+index 4050e1c..4919357 100644
+--- a/app/menu.py
++++ b/app/menu.py
+@@ -1,243 +1,82 @@
+ import logging
+-from app.models import UserManager
+-from app.db import get_all_users, get_all_words, add_word, save_quiz_result
++from app.user_actions import (
++    select_or_create_user,
++    show_all_users,
++    confirm_user_deletion,
++    change_username
++)
++from app.quiz_logic import start_quiz, select_language, show_detailed_results
+ from app.utils import log_error
+-from app.db import SessionLocal, QuizResult, User
++
+ 
+ def main_menu():
+     """
+     Главное меню программы.
+     """
+-    logging.info("Запуск консольного меню.")
++    current_user = None
++    logging.info("Запуск главного меню.")
+     print("\nДобро пожаловать в программу \"SpeakEasy\"!")
+ 
+     while True:
+-        print("\n--- Главное меню ---")
+-        print("1. Управление пользователями")
+-        print("2. Работа со словарём")
+-        print("3. Выйти")
+-        choice = input("Ваш выбор: ")
++        try:
++            if current_user:
++                current_user = handle_user_menu(current_user)
++            else:
++                current_user = handle_main_menu()
++        except Exception as e:
++            log_error(f"Ошибка в main_menu: {e}")
++            print(f"Произошла ошибка: {e}. Попробуйте снова.")
+ 
+-        if choice == "1":
+-            user_menu()
+-        elif choice == "2":
+-            dictionary_menu()
+-        elif choice == "3":
+-            print("Выход из программы...")
+-            logging.info("Программа завершена.")
+-            break
+-        else:
+-            print("Неверный выбор. Попробуйте снова.")
+ 
+-def user_menu():
++def handle_main_menu():
+     """
+-    Меню для управления пользователями.
++    Логика главного меню.
+     """
+-    print("\n--- Управление пользователями ---")
+-    print("1. Показать всех пользователей")
+-    print("2. Добавить пользователя")
+-    print("3. Выбрать пользователя")
+-    print("4. Назад")
+-    choice = input("Ваш выбор: ")
++    print("\n--- Главное меню ---")
++    print("1. Выбрать или добавить пользователя")
++    print("2. Просмотреть всех пользователей")
++    print("3. Выйти")
+ 
++    choice = input("Ваш выбор: ")
+     if choice == "1":
+-        show_all_users()
++        return select_or_create_user()
+     elif choice == "2":
+-        username = input("Введите имя пользователя: ").strip()
+-        if username:
+-            UserManager(username).create_user()
+-            print(f"Пользователь {username} добавлен!")
++        show_all_users()
+     elif choice == "3":
+-        username = input("Введите имя пользователя: ").strip()
+-        if username:
+-            user_submenu(username)
+-    elif choice == "4":
+-        return
++        print("Выход из программы...")
++        logging.info("Программа завершена.")
++        exit(0)
+     else:
+         print("Неверный выбор. Попробуйте снова.")
++        return None
+ 
+-def user_submenu(username):
+-    """
+-    Подменю для выбранного пользователя.
+-    """
+-    user_manager = UserManager(username)
+-
+-    while True:
+-        print(f"\n--- Меню пользователя {username} ---")
+-        print("1. Пройти викторину")
+-        print("2. Посмотреть детализированные результаты игр")
+-        print("3. Изменить имя пользователя")
+-        print("4. Удалить пользователя")
+-        print("5. Вернуться в главное меню")
+-        choice = input("Ваш выбор: ")
+-
+-        if choice == "1":
+-            language = select_language()
+-            start_quiz(username, language)
+-        elif choice == "2":
+-            show_detailed_results(username)
+-        elif choice == "3":
+-            new_name = input("Введите новое имя пользователя: ").strip()
+-            if new_name:
+-                user_manager.change_username(new_name)
+-        elif choice == "4":
+-            confirm = input(f"Вы уверены, что хотите удалить пользователя {username}? (да/нет): ")
+-            if confirm.lower() == "да":
+-                user_manager.delete()
+-                print(f"Пользователь {username} удалён.")
+-                return
+-        elif choice == "5":
+-            return
+-        else:
+-            print("Неверный выбор. Попробуйте снова.")
+ 
+-def dictionary_menu():
++def handle_user_menu(current_user):
+     """
+-    Меню для работы со словарём.
++    Логика меню пользователя.
+     """
+-    print("\n--- Работа со словарём ---")
+-    print("1. Показать все слова")
+-    print("2. Добавить новое слово")
+-    print("3. Назад")
+-    choice = input("Ваш выбор: ")
++    print(f"\n--- Меню пользователя {current_user.username} ---")
++    print("1. Пройти викторину")
++    print("2. Посмотреть детализированные результаты игр")
++    print("3. Изменить имя пользователя")
++    print("4. Удалить пользователя")
++    print("5. Вернуться в главное меню")
+ 
++    choice = input("Ваш выбор: ")
+     if choice == "1":
+-        show_all_words()
++        language = select_language()
++        start_quiz(current_user.username, language)
+     elif choice == "2":
+-        language = input("Введите язык слова (например, 'en'): ").strip()
+-        word = input("Введите слово: ").strip()
+-        translation = input("Введите перевод: ").strip()
+-        if language and word and translation:
+-            add_word(language, word, translation)
+-            print(f"Слово {word} ({language}) добавлено!")
++        show_detailed_results(current_user.username)
+     elif choice == "3":
+-        return
++        change_username(current_user)
++    elif choice == "4":
++        if confirm_user_deletion(current_user):
++            return None  # Выход из меню пользователя после удаления
++    elif choice == "5":
++        current_user.close_session()
++        logging.info("Возврат в главное меню.")
++        return None
+     else:
+         print("Неверный выбор. Попробуйте снова.")
+-
+-def show_all_users():
+-    """
+-    Вывод всех пользователей.
+-    """
+-    try:
+-        users = get_all_users()
+-    except Exception as e:
+-        log_error(f"Ошибка при получении пользователей: {e}")
+-        users = []
+-
+-    if not users:
+-        print("Пользователи не найдены.")
+-    else:
+-        print("\n--- Список пользователей ---")
+-        for user in users:
+-            print(f"- {user.username}")
+-
+-def show_all_words():
+-    """
+-    Вывод всех слов.
+-    """
+-    try:
+-        words = get_all_words()
+-    except Exception as e:
+-        log_error(f"Ошибка при получении слов: {e}")
+-        words = []
+-
+-    if not words:
+-        print("Словарные слова не найдены.")
+-    else:
+-        print("\n--- Список слов ---")
+-        for word in words:
+-            print(f"{word.language}: {word.word} -> {word.translation}")
+-
+-def select_language():
+-    """
+-    Выбор языка для викторины.
+-    """
+-    while True:
+-        print("\n--- Выберите язык для викторины ---")
+-        print("1. Английский → Русский")
+-        print("2. Испанский → Русский")
+-        print("3. Немецкий → Русский")
+-        print("4. Французский → Русский")
+-        choice = input("Ваш выбор: ")
+-
+-        if choice == "1":
+-            return "en"
+-        elif choice == "2":
+-            return "es"
+-        elif choice == "3":
+-            return "de"
+-        elif choice == "4":
+-            return "fr"
+-        else:
+-            print("Неверный выбор. Попробуйте снова.")
+-
+-def start_quiz(username, language):
+-    """
+-    Запуск викторины.
+-    """
+-    try:
+-        words = get_all_words()
+-        language_words = [word for word in words if word.language == language]
+-    except Exception as e:
+-        log_error(f"Ошибка при получении слов для викторины: {e}")
+-        language_words = []
+-
+-    if not language_words:
+-        print(f"Словарь для языка {language} пуст или не найден.")
+-        return
+-
+-    print(f"\nНачинаем викторину для пользователя {username}.")
+-    correct_answers = 0
+-
+-    for word in language_words:
+-        answer = input(f"Переведите слово '{word.word}': ").strip()
+-        if answer.lower() == word.translation.lower():
+-            print("Правильно!")
+-            correct_answers += 1
+-        else:
+-            print(f"Неправильно. Правильный ответ: {word.translation}")
+-
+-    print(f"\nВикторина завершена. Правильных ответов: {correct_answers}/{len(language_words)}")
+-
+-    user = next((u for u in get_all_users() if u.username == username), None)
+-    if user:
+-        save_quiz_result(user.id, language, correct_answers, len(language_words))
+-
+-def show_detailed_results(username):
+-    """
+-    Показать детализированные результаты игр пользователя.
+-    :param username: Имя пользователя, для которого нужно показать результаты.
+-    """
+-    logging.info(f"Запрос детализированных результатов для пользователя: {username}")
+-    session = SessionLocal()
+-    try:
+-        # Находим пользователя по имени
+-        user = session.query(User).filter(User.username == username).first()
+-        if not user:
+-            print(f"Пользователь {username} не найден.")
+-            logging.warning(f"Пользователь {username} не найден в базе данных.")
+-            return
+-
+-        # Получаем результаты викторин для пользователя
+-        results = session.query(QuizResult).filter(QuizResult.user_id == user.id).all()
+-        if not results:
+-            print(f"У пользователя {username} пока нет результатов викторин.")
+-            logging.info(f"У пользователя {username} отсутствуют записи в таблице QuizResult.")
+-            return
+-
+-        # Выводим результаты
+-        print(f"\n--- Детализированные результаты игр пользователя {username} ---")
+-        for result in results:
+-            print(f"Язык: {result.language}")
+-            print(f"Правильные ответы: {result.correct_answers}/{result.total_questions}")
+-            print("-" * 30)
+-        logging.info(f"Пользователь {username} успешно просмотрел {len(results)} результатов.")
+-    except Exception as e:
+-        logging.error(f"Ошибка при получении результатов для пользователя {username}: {e}")
+-        print(f"Произошла ошибка при получении результатов. Попробуйте снова.")
+-    finally:
+-        session.close()
+-
+-if __name__ == "__main__":
+-    main_menu()
++    return current_user
+diff --git a/app/quiz_logic.py b/app/quiz_logic.py
+new file mode 100644
+index 0000000..0e83562
+--- /dev/null
++++ b/app/quiz_logic.py
+@@ -0,0 +1,110 @@
++import logging
++from app.db import get_all_words, SessionLocal, QuizResult, User
++from app.utils import log_error
++
++
++def select_language():
++    """
++    Выбор языка для викторины.
++    """
++    while True:
++        print("\n--- Выберите язык для викторины ---")
++        print("1. Английский → Русский")
++        print("2. Испанский → Русский")
++        print("3. Немецкий → Русский")
++        print("4. Французский → Русский")
++        choice = input("Ваш выбор: ")
++
++        if choice == "1":
++            return "en"
++        elif choice == "2":
++            return "es"
++        elif choice == "3":
++            return "de"
++        elif choice == "4":
++            return "fr"
++        else:
++            print("Неверный выбор. Попробуйте снова.")
++
++
++def start_quiz(username, language):
++    """
++    Начало викторины для пользователя.
++    """
++    try:
++        words = get_all_words()
++        language_words = [word for word in words if word.language == language]
++
++        if not language_words:
++            print(f"Словарь для языка {language} пуст или не найден.")
++            logging.warning(f"Словарь для языка {language} отсутствует.")
++            return
++
++        correct_answers = 0
++        total_questions = len(language_words)
++
++        print(f"\nНачинаем викторину для пользователя {username}.")
++        print("Введите перевод для каждого слова. Напишите 'exit', чтобы остановить викторину.\n")
++        logging.info(f"Викторина начата (пользователь: {username}, язык: {language}).")
++
++        for word in language_words:
++            answer = input(f"Что означает слово '{word.word}'? ").strip()
++            if answer.lower() == "exit":
++                print("Викторина остановлена.")
++                logging.info(f"Викторина для пользователя {username} остановлена.")
++                break
++            if answer.lower() == word.translation.lower():
++                print("Правильно!")
++                correct_answers += 1
++            else:
++                print(f"Неправильно. Правильный ответ: {word.translation}")
++
++        print("\nВикторина завершена.")
++        print(f"Вы ответили правильно на {correct_answers} из {total_questions} вопросов.")
++        logging.info(f"Викторина завершена (пользователь: {username}): {correct_answers}/{total_questions}.")
++
++        save_quiz_result(username, language, correct_answers, total_questions)
++    except Exception as e:
++        log_error(f"Ошибка в start_quiz: {e}")
++        print(f"Произошла ошибка: {e}. Викторина не завершена.")
++
++
++def save_quiz_result(username, language, correct_answers, total_questions):
++    """
++    Сохраняет результаты викторины в базу данных.
++    """
++    session = SessionLocal()
++    user = session.query(User).filter_by(username=username).first()
++    new_result = QuizResult(
++        user_id=user.id,
++        language=language,
++        correct_answers=correct_answers,
++        total_questions=total_questions
++    )
++    session.add(new_result)
++    session.commit()
++    session.close()
++    print("Результаты сохранены.")
++
++
++def show_detailed_results(username):
++    """
++    Показывает детализированные результаты игр пользователя.
++    """
++    try:
++        session = SessionLocal()
++        user = session.query(User).filter_by(username=username).first()
++        if not user or not user.quiz_results:
++            print(f"У пользователя {username} пока нет результатов викторин.")
++            session.close()
++            return
++
++        print(f"\n--- Детализированные результаты игр пользователя {username} ---")
++        for result in user.quiz_results:
++            print(f"Язык: {result.language}")
++            print(f"Правильные ответы: {result.correct_answers}/{result.total_questions}")
++            print("-" * 30)
++        session.close()
++    except Exception as e:
++        log_error(f"Ошибка в show_detailed_results: {e}")
++        print(f"Произошла ошибка: {e}.")
+diff --git a/app/user_actions.py b/app/user_actions.py
+new file mode 100644
+index 0000000..208b27b
+--- /dev/null
++++ b/app/user_actions.py
+@@ -0,0 +1,60 @@
++import logging
++from app.models import UserManager
++from app.db import get_all_users
++from app.utils import log_error
++
++
++def select_or_create_user():
++    """
++    Выбирает или создаёт нового пользователя.
++    """
++    username = input("Введите имя пользователя: ").strip()
++    if username:
++        user = UserManager(username)
++        print(f"Добро пожаловать, {user.username}!")
++        logging.info(f"Пользователь {user.username} выбран.")
++        return user
++    else:
++        print("Имя пользователя не может быть пустым.")
++        return None
++
++
++def show_all_users():
++    """
++    Выводит всех пользователей из базы данных.
++    """
++    try:
++        users = get_all_users()
++        if not users:
++            print("Нет зарегистрированных пользователей.")
++            logging.info("Запрос всех пользователей: данных нет.")
++            return
++
++        print("\n--- Все пользователи ---")
++        for index, user in enumerate(users, start=1):
++            print(f"{index}. {user.username}")
++        logging.info("Список пользователей успешно выведен.")
++    except Exception as e:
++        log_error(f"Ошибка в show_all_users: {e}")
++        print(f"Произошла ошибка: {e}.")
++
++
++def confirm_user_deletion(user):
++    """
++    Подтверждение удаления пользователя.
++    """
++    confirm = input(f"Вы уверены, что хотите удалить пользователя {user.username}? (да/нет): ")
++    if confirm.lower() == "да":
++        user.delete()
++        print("Пользователь успешно удалён.")
++        return True
++    return False
++
++
++def change_username(user):
++    """
++    Изменение имени пользователя.
++    """
++    new_name = input("Введите новое имя пользователя: ").strip()
++    if new_name:
++        user.change_username(new_name)
+diff --git a/app/utils.py b/app/utils.py
+index b614815..c9eab8c 100644
+--- a/app/utils.py
++++ b/app/utils.py
+@@ -1,23 +1,30 @@
+ import logging
+-import os
+ 
+ 
+-def setup_logging():
++def setup_logging(log_level=logging.INFO, to_console=False):
+     """
+     Настройка общего логирования.
++    :param log_level: Уровень логирования (например, logging.INFO, logging.DEBUG).
++    :param to_console: Выводить ли логи в консоль.
+     """
+-    log_dir = "logs"
+-    if not os.path.exists(log_dir):
+-        os.makedirs(log_dir)  # Создаём директорию для логов, если её нет
+-
+     logging.basicConfig(
+-        filename=os.path.join(log_dir, "app.log"),
+-        level=logging.INFO,
++        filename="logs/app.log",
++        level=log_level,
+         format="%(asctime)s [%(levelname)s] %(message)s",
+         datefmt="%Y-%m-%d %H:%M:%S",
+         encoding="utf-8"
+     )
+ 
++    if to_console:
++        console_handler = logging.StreamHandler()
++        console_handler.setLevel(log_level)
++        console_formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
++        console_handler.setFormatter(console_formatter)
++        logging.getLogger().addHandler(console_handler)
++
++    logging.info("Логирование настроено на уровень %s.", logging.getLevelName(log_level))
++
++
+ 
+ def setup_sqlalchemy_logging(level=logging.WARNING):
+     """
+@@ -26,36 +33,44 @@ def setup_sqlalchemy_logging(level=logging.WARNING):
+     :param level: Уровень логирования (например, logging.INFO, logging.ERROR).
+     """
+     logging.getLogger("sqlalchemy.engine").setLevel(level)
++    logging.info("SQLAlchemy логирование настроено на уровень %s.", logging.getLevelName(level))
+ 
+ 
+-def log_error(message):
++def log_debug(message):
+     """
+-    Логирует сообщение об ошибке.
++    Логирует сообщение уровня DEBUG.
++    :param message: Сообщение для логирования.
+     """
+-    logging.error(message)
+-    print(f"Ошибка: {message}")
++    logging.debug(message)
+ 
+ 
+ def log_info(message):
+     """
+-    Логирует информационное сообщение.
++    Логирует сообщение уровня INFO.
++    :param message: Сообщение для логирования.
+     """
+     logging.info(message)
+-    print(f"Информация: {message}")
+ 
+ 
+-def log_message(message, level="info"):
++def log_warning(message):
+     """
+-    Универсальная функция логирования.
++    Логирует сообщение уровня WARNING.
+     :param message: Сообщение для логирования.
+-    :param level: Уровень логирования (info, warning, error, critical).
+-    """
+-    levels = {
+-        "info": logging.info,
+-        "warning": logging.warning,
+-        "error": logging.error,
+-        "critical": logging.critical
+-    }
+-    log_function = levels.get(level.lower(), logging.info)
+-    log_function(message)
+-    print(f"{level.capitalize()}: {message}")
++    """
++    logging.warning(message)
++
++
++def log_error(message):
++    """
++    Логирует сообщение уровня ERROR.
++    :param message: Сообщение для логирования.
++    """
++    logging.error(message)
++
++
++def log_critical(message):
++    """
++    Логирует сообщение уровня CRITICAL.
++    :param message: Сообщение для логирования.
++    """
++    logging.critical(message)
+diff --git a/docs/main-_SpeakEasy.png b/docs/main-_SpeakEasy.png
+new file mode 100644
+index 0000000..4cf6045
+Binary files /dev/null and b/docs/main-_SpeakEasy.png differ
+diff --git a/docs/main.puml b/docs/main.puml
+new file mode 100644
+index 0000000..5eb8896
+--- /dev/null
++++ b/docs/main.puml
+@@ -0,0 +1,92 @@
++@startuml
++title Архитектура SpeakEasy
++
++' Диаграмма классов
++package "App" {
++    class MainMenu {
++        +main_menu(): void
++        +handle_main_menu(): void
++        +handle_user_menu(): void
++    }
++
++    class UserActions {
++        +select_or_create_user(): User
++        +show_all_users(): void
++        +confirm_user_deletion(User): bool
++        +change_username(User): void
++    }
++
++    class QuizLogic {
++        +select_language(): str
++        +start_quiz(username, language): void
++        +save_quiz_result(username, language, correct_answers, total_questions): void
++        +show_detailed_results(username): void
++    }
++
++    class Utils {
++        +setup_logging(log_level): void
++        +log_error(message): void
++        +log_info(message): void
++    }
++
++    MainMenu --> UserActions
++    MainMenu --> QuizLogic
++    MainMenu --> Utils
++    QuizLogic --> Utils
++}
++
++@enduml
++
++' Диаграмма последовательности: Добавление пользователя
++@startuml
++title Диаграмма последовательности: Добавление пользователя
++
++actor Пользователь as User
++participant "Главное меню" as MainMenu
++participant "Действия с пользователями" as UserActions
++participant "База данных" as Database
++
++User -> MainMenu: Запуск главного меню
++MainMenu -> User: Введите имя пользователя
++User -> MainMenu: Alice
++MainMenu -> UserActions: select_or_create_user("Alice")
++UserActions -> Database: Проверить наличие пользователя
++Database --> UserActions: Пользователь не найден
++UserActions -> Database: Добавить пользователя в базу данных
++Database --> UserActions: Пользователь добавлен
++UserActions --> MainMenu: Новый пользователь создан
++MainMenu --> User: Пользователь Alice добавлен
++@enduml
++
++' Диаграмма последовательности: Прохождение викторины
++@startuml
++title Диаграмма последовательности: Прохождение викторины
++
++actor Пользователь as User
++participant "Главное меню" as MainMenu
++participant "Логика викторины" as QuizLogic
++participant "База данных" as Database
++
++User -> MainMenu: Выбрать викторину
++MainMenu -> QuizLogic: select_language()
++QuizLogic -> User: Выберите язык
++User -> QuizLogic: Английский → Русский
++
++QuizLogic -> Database: Загрузить слова для языка "en"
++Database --> QuizLogic: Список слов
++
++loop На каждый вопрос
++    QuizLogic -> User: Вопрос: Перевод слова "cat"?
++    User -> QuizLogic: Ответ: "кот"
++    QuizLogic -> QuizLogic: Проверка ответа
++    alt Правильный ответ
++        QuizLogic -> User: Правильно!
++    else Неправильный ответ
++        QuizLogic -> User: Неправильно. Правильный ответ: "кот"
++    end
++end
++
++QuizLogic -> Database: Сохранить результаты викторины
++Database --> QuizLogic: Результаты сохранены
++QuizLogic --> User: Викторина завершена. Результаты: 3/5
++@enduml
+diff --git a/docs/main_add_user.png b/docs/main_add_user.png
+new file mode 100644
+index 0000000..9850613
+Binary files /dev/null and b/docs/main_add_user.png differ
+diff --git a/docs/main_quiz_logic.png b/docs/main_quiz_logic.png
+new file mode 100644
+index 0000000..174965e
+Binary files /dev/null and b/docs/main_quiz_logic.png differ
+diff --git a/logs/app.log b/logs/app.log
+index 5a9a8e5..ba8d06d 100644
+--- a/logs/app.log
++++ b/logs/app.log
+@@ -404,3 +404,30 @@ WHERE ? = quiz_results.user_id
+ 2025-01-13 19:43:58 [INFO] Программа завершена.
+ 2025-01-13 20:53:41 [INFO] Запуск консольного меню.
+ 2025-01-13 21:01:51 [INFO] Программа завершена.
++2025-01-14 17:52:13 [INFO] Запуск консольного меню.
++2025-01-14 17:52:47 [INFO] Запрос детализированных результатов для пользователя: Aleksej
++2025-01-14 17:52:47 [INFO] Пользователь Aleksej успешно просмотрел 7 результатов.
++2025-01-14 20:53:02 [INFO] Запуск главного меню.
++2025-01-14 20:53:07 [INFO] Список пользователей успешно выведен.
++2025-01-14 21:03:22 [INFO] Запуск главного меню.
++2025-01-14 21:03:27 [INFO] Список пользователей успешно выведен.
++2025-01-14 21:03:31 [INFO] Программа завершена.
++2025-01-14 21:09:37 [INFO] Логирование настроено на уровень INFO.
++2025-01-14 21:09:37 [INFO] SQLAlchemy логирование настроено на уровень WARNING.
++2025-01-14 21:09:37 [INFO] Запуск главного меню.
++2025-01-14 21:10:16 [INFO] Список пользователей успешно выведен.
++2025-01-14 21:10:29 [INFO] Список пользователей успешно выведен.
++2025-01-14 21:14:02 [INFO] Пользователь Aleksej выбран.
++2025-01-14 21:17:46 [INFO] Логирование настроено на уровень DEBUG.
++2025-01-14 21:17:46 [INFO] SQLAlchemy логирование настроено на уровень WARNING.
++2025-01-14 21:17:46 [INFO] Запуск главного меню.
++2025-01-14 21:17:51 [INFO] Список пользователей успешно выведен.
++2025-01-14 21:20:21 [INFO] Логирование настроено на уровень INFO.
++2025-01-14 21:20:21 [INFO] SQLAlchemy логирование настроено на уровень WARNING.
++2025-01-14 21:20:21 [INFO] Запуск главного меню.
++2025-01-14 21:23:15 [INFO] Логирование настроено на уровень INFO.
++2025-01-14 21:23:15 [INFO] SQLAlchemy логирование настроено на уровень WARNING.
++2025-01-14 21:23:15 [INFO] Запуск главного меню.
++2025-01-14 21:23:26 [INFO] Логирование настроено на уровень INFO.
++2025-01-14 21:23:26 [INFO] SQLAlchemy логирование настроено на уровень WARNING.
++2025-01-14 21:23:26 [INFO] Запуск главного меню.
+diff --git a/main.puml b/main.puml
+deleted file mode 100644
+index a3f69d4..0000000
+--- a/main.puml
++++ /dev/null
+@@ -1,14 +0,0 @@
+-###
+-SpeakEasy
+-
+-## Описание
+-
+-###
+-
+-**SpeakEasy** — это приложение для изучения иностранных слов. Оно поддерживает:
+-- Многопользовательский режим
+-- Викторины с выбором языка
+-- Хранение статистики и детализированных результатов
+-- Работа с базой данных SQLite
+-- Логирование и управление пользователями
+-- Поддержка веб-интерфейса с использованием FastAPI
+diff --git a/requirements.txt b/requirements.txt
+index fd1de98..c6e6bf6 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -10,5 +10,5 @@ pytz==2024.2
+ six==1.17.0
+ tabulate==0.9.0
+ tzdata==2024.2
+-fastapi==0.95.2
+-uvicorn==0.23.0
+\ No newline at end of file
++fastapi==0.115.6
++uvicorn==0.23.0
+diff --git a/setup.py b/setup.py
+index 6fe0edc..7d64650 100644
+--- a/setup.py
++++ b/setup.py
+@@ -3,10 +3,27 @@ from setuptools import setup, find_packages
+ setup(
+     name="speakeasy",
+     version="1.0.0",
++    author="Ваше имя",
++    author_email="ваш.email@example.com",
++    description="Приложение для изучения иностранных слов",
++    long_description=open("README.md").read(),
++    long_description_content_type="text/markdown",
++    url="https://github.com/ваш-проект",
+     packages=find_packages(),
+     include_package_data=True,
+     install_requires=[
+-        "Flask",
+-        "pytest"
++        "fastapi==0.115.6",
++        "uvicorn==0.23.0",
++        "pandas==2.2.3",
++        "numpy==2.2.0",
++        "pytest==8.3.4",
++        "colorama==0.4.6",
++        "tabulate==0.9.0"
+     ],
++    classifiers=[
++        "Programming Language :: Python :: 3",
++        "License :: OSI Approved :: MIT License",
++        "Operating System :: OS Independent",
++    ],
++    python_requires=">=3.10",
+ )
+diff --git a/test_data.py b/test_data.py
+index 2d2dbc0..d9c16c6 100644
+--- a/test_data.py
++++ b/test_data.py
+@@ -1,9 +1,9 @@
+ import pytest
+-from app.db import initialize_database, add_user, get_all_users, add_word, get_all_words
+ from sqlalchemy import create_engine
+ from sqlalchemy.orm import sessionmaker
+ from app.db import Base, User, Word
+ 
++
+ @pytest.fixture
+ def test_session():
+     """
+@@ -17,6 +17,7 @@ def test_session():
+     session.close()
+     engine.dispose()
+ 
++
+ def test_add_user(test_session):
+     """
+     Тест добавления пользователей в базу данных.
+@@ -29,6 +30,7 @@ def test_add_user(test_session):
+     assert len(users) == 1
+     assert users[0].username == "Aleksej"
+ 
++
+ def test_add_word(test_session):
+     """
+     Тест добавления слов в базу данных.
+@@ -42,6 +44,7 @@ def test_add_word(test_session):
+     assert words[0].word == "cat"
+     assert words[0].translation == "кот"
+ 
++
+ def test_get_all_users(test_session):
+     """
+     Тест получения всех пользователей.
+@@ -55,6 +58,7 @@ def test_get_all_users(test_session):
+     assert users[0].username == "Aleksej"
+     assert users[1].username == "Linda"
+ 
++
+ def test_get_all_words(test_session):
+     """
+     Тест получения всех слов.
+diff --git a/tests/test_models.py b/tests/test_models.py
+index 4af1a4e..6e95c14 100644
+--- a/tests/test_models.py
++++ b/tests/test_models.py
+@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
+ from sqlalchemy.orm import sessionmaker
+ from app.db import Base, User, QuizResult
+ 
++
+ @pytest.fixture
+ def test_db():
+     """
+@@ -14,6 +15,7 @@ def test_db():
+     TestingSessionLocal = sessionmaker(bind=engine)
+     return TestingSessionLocal()
+ 
++
+ def test_add_user(test_db):
+     """
+     Тест добавления пользователя.
+@@ -26,6 +28,7 @@ def test_add_user(test_db):
+     assert user is not None
+     assert user.username == "Ivan"
+ 
++
+ def test_add_quiz_result(test_db):
+     """
+     Тест добавления результата викторины.
+@@ -47,6 +50,7 @@ def test_add_quiz_result(test_db):
+     assert results[0].correct_answers == 4
+     assert results[0].total_questions == 5
+ 
++
+ def test_change_username(test_db):
+     """
+     Тест изменения имени пользователя.
+@@ -65,6 +69,7 @@ def test_change_username(test_db):
+     assert updated_user is not None
+     assert updated_user.username == "Maria"
+ 
++
+ def test_delete_user(test_db):
+     """
+     Тест удаления пользователя.
